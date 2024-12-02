@@ -1,11 +1,13 @@
 ﻿namespace Day01
 {
+    /// <summary>
+    /// Solution of Advent of Code 2024, Day 1 <see cref="https://adventofcode.com/2024/day/1"/>
+    /// </summary>
+
     internal class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
-
             var input = ReadInput();
             Console.WriteLine($"Day 1: Part 1: {Part1(input)}");
             Console.WriteLine($"Day 1: Part 2: {Part2(input)}");
