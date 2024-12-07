@@ -6,13 +6,25 @@
         {
             var input = ReadInput();
             Console.WriteLine($"Day 7 Part 1: {Part1(input)}");
-            input = ReadInput();
             Console.WriteLine($"Day 7 Part 2: {Part2(input)}");
+        }
+
+        private static string Part1(List<Equation> input)
+        {
+            Int64 result = 0;
+            foreach (var equation in input)
+            {
+                if (CanBeFixed(equation))
+                {
+                    result += equation.Result;
+                }
+            }
+            return result.ToString();
         }
 
         private static string Part2(List<Equation> input)
         {
-            Int128 result = 0;
+            Int64 result = 0;
             foreach (var equation in input)
             {
 
@@ -24,29 +36,16 @@
             return result.ToString();
         }
 
-        private static string Part1(List<Equation> input)
-        {
-            Int128 result = 0;
-            foreach (var equation in input)
-            {
-                if (CanBeFixed(equation))
-                {
-                    result += equation.Result;
-                }
-            }
-            return result.ToString();
-        }
-
         private static bool CanBeFixed(Equation equation)
         {
-            int operatons = equation.Values.Count - 1;
+            var operations = equation.Values.Count - 1;
 
-            for (long n = 0; n < 1 << operatons; n++)
+            for (long n = 0; n < 1 << operations; n++)
             {
-                long res = equation.Values[0];
-                for (int i = 0; i < operatons; i++)
+                var res = equation.Values[0];
+                for (var i = 0; i < operations; i++)
                 {
-                    long value = equation.Values[i+1];
+                    var value = equation.Values[i+1];
                     long operation = (n >> i) & 1;
                     if (operation == 0)
                     {
@@ -68,20 +67,19 @@
 
         private static bool CanBeFixed2(Equation equation)
         {
-            int operatons = equation.Values.Count - 1;
-
-            var opcodes = new int[operatons];
-            for (var i = 0; i < operatons; i++)
+            var operations = equation.Values.Count - 1;
+            var opcodes = new int[operations];
+            for (var i = 0; i < operations; i++)
             {
                 opcodes[i] = 0;
             }
 
             while (true) 
             {
-                Int128 res = equation.Values[0];
-                for (int i = 0; i < operatons; i++)
+                var res = equation.Values[0];
+                for (int i = 0; i < operations; i++)
                 {
-                    long value = equation.Values[i + 1];
+                    var value = equation.Values[i + 1];
                     if (opcodes[i] == 0)
                     {
                         res += value;
@@ -92,7 +90,11 @@
                     }
                     else
                     {
-                        res = Int128.Parse(res.ToString() + value.ToString());
+                        res = long.Parse(res.ToString() + value.ToString());
+                    }
+                    if (res > equation.Result)
+                    {
+                        break;
                     }
                 }
 
@@ -102,8 +104,8 @@
                 }
 
                 // next opcode
-                int carry = 1;
-                for (int i = 0; i < operatons; i++)
+                var carry = 1;
+                for (var i = 0; i < operations; i++)
                 {
                     if (opcodes[i] == 2)
                     {
@@ -133,12 +135,14 @@
 
             foreach (var line in lines)
             {
-                var equation = new Equation();
-                equation.Result = long.Parse(line.Substring(0, line.IndexOf(":")));
+                var equation = new Equation
+                {
+                    Result = long.Parse(line[..line.IndexOf(":")])
+                };
 
-                var values = line.Substring(line.IndexOf(":") + 2);
+                var values = line[(line.IndexOf(":") + 2)..];
                 var parts = values.Split(" ");
-                equation.Values.AddRange(parts.Select(Int64.Parse));
+                equation.Values.AddRange(parts.Select(long.Parse));
                 result.Add(equation);
             }
 
