@@ -51,11 +51,6 @@
             return result.ToString();
         }
 
-        private static bool IsValidUpdate(List<int> update, List<Rule> rules)
-        {
-            return rules.All(rule => rule.Matches(update));
-        }
-
         private static string Part2(Manual manual)
         {
             var result = 0;
@@ -69,6 +64,12 @@
             }
             return result.ToString();
         }
+
+        private static bool IsValidUpdate(List<int> update, List<Rule> rules)
+        {
+            return rules.All(rule => rule.Matches(update));
+        }
+
 
         private static List<int> Reorder(List<int> update, List<Rule> rules)
         {
