@@ -1,6 +1,4 @@
-﻿using System.Data;
-
-namespace Day12
+﻿namespace Day12
 {
     internal class Program
     {
@@ -32,13 +30,15 @@ namespace Day12
                     {
                         continue;
                     }
-                    var region = new Region();
-                    region.plant = input[y, x];
-                    region.plots = FindRegion(input[y, x], current, input, width, height);
+                    var region = new Region
+                    {
+                        plant = input[y, x],
+                        plots = FindRegion(input[y, x], current, input, width, height)
+                    };
                     visited.UnionWith(region.plots);
 
                     var area = region.plots.Count;
-                    var perimeter = Perimeter(region.plots);
+                    var perimeter = PerimeterLength(region.plots);
                     var price = area * perimeter;
                     result += price;
                     regions.Add(region);
@@ -48,27 +48,20 @@ namespace Day12
             return result.ToString();
         }
 
-        private static int Perimeter(HashSet<Pos> regionPlots)
+        private static int PerimeterLength(HashSet<Pos> regionPlots)
         {
-            int result = 0;
+            var result = 0;
             foreach (var plot in regionPlots)
             {
-                foreach (var neighbor in plot.AllNeighbors())
-                {
-                    if (!regionPlots.Contains(neighbor))
-                    {
-                        result++;
-                    }
-                }
+                result += plot
+                    .AllNeighbors()
+                    .Count(neighbor => !regionPlots.Contains(neighbor));
             }
             return result;
         }
 
         private static HashSet<Pos> FindRegion(char plant, Pos current, char[,] input, int width, int height)
         {
-            var result = new List<Pos>();
-            result.Add(current);
-
             var visited = new HashSet<Pos>();
 
             var queue = new List<Pos>(){current};
@@ -78,21 +71,17 @@ namespace Day12
                 var next = queue.First();
                 queue.RemoveAt(0);
                 visited.Add(next);
-                foreach (var neighbor in next.GetNeighbors(width, height))
+                foreach (var neighbor in next.NeighborsOnMap(width, height))
                 {
                     if (input[neighbor.Y, neighbor.X] != plant)
                     {
                         continue;
                     }
-                    if (visited.Contains(neighbor))
+
+                    if (!visited.Contains(neighbor) && !queue.Contains(neighbor))
                     {
-                        continue;
+                        queue.Add(neighbor);
                     }
-                    if (queue.Contains(neighbor))
-                    {
-                        continue;
-                    }
-                    queue.Add(neighbor);
                 }
             }
             return visited;
@@ -103,7 +92,6 @@ namespace Day12
             var height = input.GetLength(0);
             var width = input.GetLength(1);
 
-            var regions = new List<Region>();
             var visited = new HashSet<Pos>();
 
             var result = 0L;
@@ -126,24 +114,11 @@ namespace Day12
                     visited.UnionWith(region.plots);
 
                     long area = region.plots.Count;
-
-                    if (x ==121 && y == 100)
-                    {
-                        Console.WriteLine($"A region of {region.plant} plants with area {area} at {x},{y}");
-                    }
-
                     long sideCount = SideCount(region.plots);
-
-                    if (sideCount % 2 != 0)
-                    {
-                        Console.WriteLine($"A region of {region.plant} plants with area {area} and sides {sideCount} at {x},{y}");
-                    }
-
                     var price = area * sideCount;
 
                     //Console.WriteLine($"A region of {region.plant} plants with price {area} * {sideCount} = {price}");
                     result += price;
-                    regions.Add(region);
                 }
             }
 
@@ -186,7 +161,6 @@ namespace Day12
                         {
                             continue;
                         }
-
                         while (true)
                         {
                             if (current.Dir is 0 or 3)
@@ -197,7 +171,6 @@ namespace Day12
                                 {
                                     break;
                                 }
-
                                 current.X2 = next.X2;
                                 fences.Remove(next);
                             }
@@ -210,7 +183,6 @@ namespace Day12
                                 {
                                     break;
                                 }
-
                                 current.Y2 = next.Y2;
                                 fences.Remove(next);
                             }
