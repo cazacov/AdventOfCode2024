@@ -1,5 +1,4 @@
-﻿using System.Linq.Expressions;
-using System.Text.RegularExpressions;
+﻿using System.Text.RegularExpressions;
 
 namespace Day14
 {
@@ -53,7 +52,7 @@ namespace Day14
             var width = 101;
             var height = 103;
 
-            int step = 1;
+            var step = 1;
 
             while (true) {
                 var end = new List<Pos>();
@@ -68,10 +67,10 @@ namespace Day14
                     end.Add(new Pos(x, y));
                 }
 
+                // Check if no robots share the same position
                 var group = end.GroupBy(x => x).ToDictionary(x => x.Key, g => g.ToList());
                 if (group.All(p => p.Value.Count == 1))
                 {
-                    // No robots share the same position
                     DisplayTree(height, width, end, step);
                     break;
                 }
