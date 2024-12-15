@@ -7,7 +7,7 @@ namespace Day15
         static void Main(string[] args)
         {
             var input = ReadInput();
-            Console.WriteLine($"Day 15 Part 1: {Part1(input.Item1, input.Item2)}");
+            //Console.WriteLine($"Day 15 Part 1: {Part1(input.Item1, input.Item2)}");
             Console.WriteLine("\n\n\n");
             input = ReadInput();
             Console.WriteLine($"Day 15 Part 2: {Part2(input.Item1, input.Item2)}");
@@ -83,7 +83,98 @@ namespace Day15
 
         private static string Part2(Map map, List<int> directions)
         {
-            return "Not implemented";
+            map.Upscale();
+            Console.WriteLine("Initial state");
+            map.Display2();
+            Console.WriteLine();
+            var robot = map.Start;
+            for (int i = 0; i < directions.Count; i++) {
+                var direction = directions[i];
+//                map.DisplayDirection(direction, i);
+                var nextPos = robot.NextInDir(direction);
+                var nextWall = map.Walls.FirstOrDefault(w => w.Equals(nextPos));
+                var nextContainer = map.ContainerInPos(nextPos);
+
+                if (nextWall == null && nextContainer == null)
+                {
+                    robot = nextPos;
+//                    Console.WriteLine("move");
+                }
+                else if (nextWall != null)
+                {
+//                    Console.WriteLine("block");
+                }
+                else
+                {
+                    var backup = new List<Pos>(map.Containers);
+                    if (TryMoveContainer2(nextContainer, direction, map))
+                    {
+                        robot = nextPos;
+//                        Console.WriteLine("move");
+                    }
+                    else
+                    {
+//                        Console.WriteLine("block");
+                        map.Containers.Clear();
+                        map.Containers.UnionWith(backup);
+                    }
+                }
+                map.Start = robot;
+//                map.Display2();
+//                Console.WriteLine();
+//                Console.ReadLine();
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("Final state");
+            map.Display2();
+
+            int score = 0;
+            foreach (var container in map.Containers)
+            {
+                score += container.Y * 100 + container.X;
+            }
+            return score.ToString();
+        }
+
+        private static bool TryMoveContainer2(Pos container, int direction, Map map)
+        {
+            List<Pos> edges = new List<Pos>();
+            switch (direction)
+            {
+                case 0:
+                case 2:
+                    edges.Add(container.NextInDir(direction));
+                    edges.Add(new Pos(container.X + 1, container.Y).NextInDir(direction));
+                    break;
+                case 1:
+                    edges.Add(new Pos(container.X + 1, container.Y).NextInDir(direction));
+                    break;
+                case 3:
+                    edges.Add(container.NextInDir(direction));
+                    break;
+            }
+
+
+            if (edges.Any(e => map.Walls.Contains(e)))
+            {
+                return false;
+            }
+            if (edges.All(e => map.ContainerInPos(e) == null))
+            {
+                map.Containers.Remove(container);
+                map.Containers.Add(container.NextInDir(direction));
+                return true;
+            }
+
+            var toPush = edges.Select(e => map.ContainerInPos(e)).Where(x => x != null).Distinct().ToList();
+            var success = toPush.All(c => TryMoveContainer2(c, direction, map));
+            if (success)
+            {
+                map.Containers.Remove(container);
+                map.Containers.Add(container.NextInDir(direction));
+            }
+            return success;
         }
 
         private static Tuple<Map, List<int>> ReadInput()
