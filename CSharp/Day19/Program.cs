@@ -5,16 +5,14 @@
         static void Main(string[] args)
         {
             var input = ReadInput();
-            Console.WriteLine($"Day 18 Part 1: {Part1(input.Item1, input.Item2)}");
+            Console.WriteLine($"Day 19 Part 1: {Part1(input.Item1, input.Item2)}");
             Console.WriteLine("\n\n\n");
-            Console.WriteLine($"Day 18 Part 2: {Part2(input.Item1, input.Item2)}");
+            Console.WriteLine($"Day 19 Part 2: {Part2(input.Item1, input.Item2)}");
         }
-
-        public static Dictionary<string, long> cache = new Dictionary<string, long>();
 
         private static string Part1(List<string> towels, List<string> designs)
         {
-            return  designs.Where(d => IsPossible(d, towels)).Count().ToString();
+            return  designs.Count(d => IsPossible(d, towels)).ToString();
         }
 
         private static bool IsPossible(string design, List<string> towels)
@@ -36,6 +34,8 @@
             return false;
         }
 
+        public static Dictionary<string, long> cache = new Dictionary<string, long>();
+
         private static string Part2(List<string> towels, List<string> designs)
         {
             return designs.Sum(d => CountPossibilities(d, towels)).ToString();
@@ -48,9 +48,9 @@
                 return 1;
             }
 
-            if (cache.ContainsKey(design))
+            if (cache.TryGetValue(design, out var possibilities))
             {
-                return cache[design];
+                return possibilities;
             }
 
             var cnt = 0L;
