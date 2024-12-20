@@ -26,6 +26,7 @@ namespace Day20
         public int X;
         public int Y;
         public int Cost;
+        public int Cost2;
 
         public Pos(int x, int y)
         {
@@ -54,6 +55,27 @@ namespace Day20
                     {
                         yield return c;
                     }
+                }
+            }
+        }
+
+        public IEnumerable<Pos> AllNeighbors(int mapWidth, int mapHeight)
+        {
+            for (var dx = -1; dx <= 1; dx++)
+            {
+                for (var dy = -1; dy <= 1; dy++)
+                {
+                    if (Math.Abs(dx) + Math.Abs(dy) != 1)
+                    {
+                        continue;
+                    }
+                    var x = X + dx;
+                    var y = Y + dy;
+                    if (x <= 0 || x >= mapWidth - 1 || y <= 0 || y >= mapHeight - 1)
+                    {
+                        continue;
+                    }
+                    yield return new Pos(x, y);
                 }
             }
         }
