@@ -9,6 +9,8 @@
         public Pos End;
         public List<Pos> Free = new List<Pos>();
 
+        public bool[,] IsWall;
+
         public static Map ReadFromFile()
         {
             var result = new Map();
@@ -16,6 +18,20 @@
 
             result.Height = lines.Length;
             result.Width = lines[0].Length;
+
+            result.IsWall = new bool[result.Height,result.Width];
+            result.CostStart = new int[result.Height, result.Width];
+            result.CostEnd = new int[result.Height, result.Width];
+
+            for (var i = 0; i < result.Height; i++)
+            {
+                for (var j = 0; j < result.Width; j++)
+                {
+                    result.CostStart[i, j] = int.MaxValue;
+                    result.CostEnd[i, j] = int.MaxValue;
+                }
+            }
+
 
             for (var y = 0; y < lines.Length; y++)
             {
@@ -25,24 +41,32 @@
                     if (c == '#')
                     {
                         result.Walls.Add(new Pos(x, y));
+                        result.IsWall[y, x] = true;
                     }
                     else if (c == 'S')
                     {
                         result.Start = new Pos(x, y);
                         result.Free.Add(result.Start);
+                        result.IsWall[y, x] = false;
                     }
                     else if (c == 'E')
                     {
                         result.End = new Pos(x, y);
                         result.Free.Add(result.End);
+                        result.IsWall[y, x] = false;
                     }
                     else if (c == '.')
                     {
                         result.Free.Add(new Pos(x, y));
+                        result.IsWall[y, x] = false;
                     }
                 }
             }
             return result;
         }
+
+        public int[,] CostEnd { get; set; }
+
+        public int[,] CostStart { get; set; }
     }
 }

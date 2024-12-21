@@ -7,28 +7,58 @@
             var input = ReadInput();
             Console.WriteLine($"Day 20 Part 1: {Part1(input)}");
             Console.WriteLine("\n\n\n");
+            input = ReadInput();
             Console.WriteLine($"Day 20 Part 2: {Part2(input)}");
         }
 
         private static string Part1(Map map)
         {
-            // Finds the shortest path from Start to End
 
-            var cells = new HashSet<Pos>();
-            cells.UnionWith(map.Free);
+            var N = CalculateDistances(map);
 
-            var start = cells.FirstOrDefault(c => c.X == map.Start.X && c.Y == map.Start.Y);
-            var end = cells.FirstOrDefault(c => c.X == map.End.X && c.Y == map.End.Y);
+            int cheats = 0; 
 
-            foreach (var c in cells)
+            for (int y = 1; y < map.Height - 1; y++)
             {
-                c.Cost = Int32.MaxValue;
-                c.Cost2 = Int32.MaxValue;
+                for (int x = 1; x < map.Width - 1; x++)
+                {
+                    cheats += IsCheat(x, y, map, N);
+                }
             }
 
-            start.Cost = 0;
+            return cheats.ToString();
+        }
 
-            var queue = new HashSet<Pos>() { start };
+        private static string Part2(Map map)
+        {
+            var N = CalculateDistances(map);
+            int cheats = 0;
+
+
+            for (int y = 1; y < map.Height - 1; y++)
+            {
+                for (int x = 1; x < map.Width - 1; x++)
+                {
+                    for (int yy = 1; yy < map.Height - 1; yy++)
+                    {
+                        for (int xx = 1; xx < map.Width - 1; xx++)
+                        {
+                            cheats += IsCheat2(x, y, xx, yy, map, N, 20);
+                        }
+                    }
+                }
+            }
+            return cheats.ToString();
+        }
+
+
+
+
+        private static int CalculateDistances(Map map)
+        {
+            map.CostStart[map.Start.Y, map.Start.X] = 0;
+
+            var queue = new HashSet<Pos>() { map.Start };
             var visited = new HashSet<Pos>();
 
             while (true)
@@ -41,25 +71,32 @@
                 visited.Add(current);
                 queue.Remove(current);
 
-                foreach (Pos neighbor in current.Neighbors(cells, map.Width, map.Height))
+                foreach (var neighbor in current.AllNeighbors(map.Width, map.Height))
                 {
+                    if (map.IsWall[neighbor.Y, neighbor.X])
+                    {
+                        continue;
+                    }
+
                     if (visited.Contains(neighbor))
                     {
                         continue;
                     }
-                    if (neighbor.Cost > current.Cost + 1)
+
+                    var nextCost = map.CostStart[current.Y, current.X] + 1;
+                    if (map.CostStart[neighbor.Y, neighbor.X] > nextCost)
                     {
-                        neighbor.Cost = current.Cost + 1;
+                        map.CostStart[neighbor.Y, neighbor.X] = nextCost;
                     }
                     queue.Add(neighbor);
                 }
             }
 
-            int N = end.Cost;
+            int N = map.CostStart[map.End.Y, map.End.X];
 
-            end.Cost2 = 0;
+            map.CostEnd[map.End.Y, map.End.X] = 0;
             queue.Clear();
-            queue.Add(end);
+            queue.Add(map.End);
             visited.Clear();
 
             while (true)
@@ -72,51 +109,58 @@
                 visited.Add(current);
                 queue.Remove(current);
 
-                foreach (Pos neighbor in current.Neighbors(cells, map.Width, map.Height))
+                foreach (Pos neighbor in current.AllNeighbors(map.Width, map.Height))
                 {
+                    if (map.IsWall[neighbor.Y, neighbor.X])
+                    {
+                        continue;
+                    }
                     if (visited.Contains(neighbor))
                     {
                         continue;
                     }
-                    if (neighbor.Cost2 > current.Cost2 + 1)
+                    var nextCost = map.CostEnd[current.Y, current.X] + 1;
+                    if (map.CostEnd[neighbor.Y, neighbor.X] > nextCost)
                     {
-                        neighbor.Cost2 = current.Cost2 + 1;
+                        map.CostEnd[neighbor.Y, neighbor.X] = nextCost;
                     }
                     queue.Add(neighbor);
                 }
             }
 
-            int cheats = 0; 
-
-            for (int y = 1; y < map.Height - 1; y++)
-            {
-                for (int x = 1; x < map.Width - 1; x++)
-                {
-                    cheats += IsCheat(new Pos(x, y), cells, map, N);
-                }
-            }
-
-            return cheats.ToString();
+            return N;
         }
 
-        private static int IsCheat(Pos p1, HashSet<Pos> cells, Map map, int N)
+        private static int IsCheat(int x, int y, Map map, int N)
         {
-            if (!map.Walls.Contains(p1))
+            if (!map.IsWall[y,x])
             {
                 return 0;
             }
 
-            var n = p1.AllNeighbors(map.Width, map.Height);
+            long toStart = Int32.MaxValue;
+            long toEnd = Int32.MaxValue;
 
-            var c = cells.Where(c => n.Contains(c)).ToList();
-            if (c.Count < 2)
+            for (var dx = -1; dx <= 1; dx++)
             {
-                return 0;
-            }
-            long cost1 = c.Min(cc => cc.Cost);
-            long cost2 = c.Min(cc => cc.Cost2);
+                for (var dy = -1; dy <= 1; dy++)
+                {
+                    if (Math.Abs(dx) + Math.Abs(dy) != 1)
+                    {
+                        continue;
+                    }
 
-            var len = cost1 + cost2 + 2;
+                    var xx = x + dx;
+                    var yy = y + dy;
+
+                    if (!map.IsWall[yy, xx])
+                    {
+                        toStart = Math.Min(toStart, map.CostStart[yy, xx]);
+                        toEnd = Math.Min(toEnd, map.CostEnd[yy, xx]);
+                    }
+                }
+            }
+            long len = toStart + toEnd + 2;
             var save = N - len;
 
             if (save >= 100)
@@ -129,10 +173,69 @@
             }
         }
 
-        private static string Part2(Map input)
+        private static int IsCheat2(int x1, int y1, int x2, int y2, Map map, int N, int cheatLength)
         {
-            return "Not implemented";
+            if (map.IsWall[y1, x1])
+            {
+                return 0;
+            }
+
+            if (map.IsWall[y2, x2])
+            {
+                return 0;
+            }
+
+
+            var len = Math.Abs(x1 - x2) + Math.Abs(y1 - y2);
+            if (len > cheatLength)
+            {
+                return 0;
+            }
+
+            long toStart = map.CostStart[y1, x1];
+            long toEnd = map.CostEnd[y2, x2];
+/*
+            for (var dx = -1; dx <= 1; dx++)
+            {
+                for (var dy = -1; dy <= 1; dy++)
+                {
+                    if (Math.Abs(dx) + Math.Abs(dy) != 1)
+                    {
+                        continue;
+                    }
+
+                    var xxx = x1 + dx;
+                    var yyy = y1 + dy;
+                    if (!map.IsWall[yyy, xxx])
+                    {
+                        toStart = Math.Min(toStart, map.CostStart[yyy, xxx]);
+                    }
+                }
+            }
+
+            toEnd = Math.Min(toEnd, map.CostEnd[y2, x2]);
+*/
+
+
+            long pathLen = toStart + toEnd + len;
+            var save = N - pathLen;
+
+            if (save >= 100)
+            { 
+//                if (save == 76)
+//                {
+//                    Console.WriteLine($"76: {x1},{y1} {toStart}  ->  {x2},{y2} {toEnd}    {len} / {save} ");
+//                }
+                return 1;
+            }
+            else
+            {
+                return 0;
+            }
+
         }
+
+
 
         private static Map ReadInput()
         {
